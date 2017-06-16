@@ -1,11 +1,17 @@
 var express = require('express'),
+  session = require('express-session'),
+  passport = require('passport'),
 	compression = require('compression'),
 	morgan = require('morgan'),
 	formidable = require('formidable'),
 	mime = require('mime'),
 	fs = require('fs'),
+  redisStore = require('connect-redis'),
+  Redis = require('redis'),
 	path = require('path'),
 	url = require('url'),
+  bodyParser = require('body-parser'),
+  cookieParser = require('cookie-parser'),
 	http = require('follow-redirects').http,
 	https = require('follow-redirects').https,
 	crypto = require('crypto'),
@@ -19,6 +25,10 @@ var express = require('express'),
 var config = {
 	// Listening HTTP Port
 	port: process.env.HTTP_PORT || 8075,
+
+  redis: process.env.REDIS_3BD2154C_1_ENV_DOCKERCLOUD_CONTAINER_HOSTNAME || 'localhost',
+
+  secret: process.env.secret || 'yLyzip8loy2y88-_Mt0PPfbTyt2OZvr3rCMv_DFSidsIghiXLGO1MuyRUMyCQrmW',
 
 	// HTTP Cache value for the stored files
 	cache: process.env.CACHE || "max-age=290304000, public",
@@ -80,8 +90,19 @@ var config = {
 // GenerateId has the sha256 checksum as optional argument
 var generateId = (hash) => hash;
 
-const requiresAdmin = (req, res, next) => {
-  if (req.user._json._profile.app_metadata.roles[0] === 'admin') {
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+var RedisStore = redisStore(session);
+var client = Redis.createClient(6379, config.redis);
+
+var requiresAdmin = (req, res, next) => {
+  if (req.user._json.app_metadata.roles[0] === 'admin') {
     next();
   } else {
     res.status(401).json({message: 'Please log in to post pictures.'})
@@ -144,18 +165,23 @@ var ffmpegWorker = async.queue((task, callback) => {
 }, config.videoConcurrency);
 
 var app = express();
+app.use(cookieParser());
+app.use(bodyParser.json());
 app.use(session({
   store: new RedisStore({
-    host: redis,
+    host: config.redis,
     port: 6379,
     client,
     ttl: 7 * 24 * 60 * 60, // expiration from redis in seconds
   }),
-  secret: secrets.session,
+  secret: config.secret,
   resave: false,
   rolling: true,
   saveUninitialized: false,
 }));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(compression());
 app.use(morgan('short'));
 
