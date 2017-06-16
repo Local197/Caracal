@@ -86,7 +86,7 @@ const requiresAdmin = (req, res, next) => {
   } else {
     res.status(401).json({message: 'Please log in to post pictures.'})
   }
-});
+};
 
 switch (config.idsGeneration) {
 	case 'hash':
@@ -144,7 +144,7 @@ var ffmpegWorker = async.queue((task, callback) => {
 }, config.videoConcurrency);
 
 var app = express();
-server.use(session({
+app.use(session({
   store: new RedisStore({
     host: redis,
     port: 6379,
@@ -156,8 +156,6 @@ server.use(session({
   rolling: true,
   saveUninitialized: false,
 }));
-server.use(passport.initialize());
-server.use(passport.session());
 app.use(compression());
 app.use(morgan('short'));
 
