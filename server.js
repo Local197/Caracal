@@ -28,7 +28,7 @@ var config = {
 
   redis: process.env.REDIS_3BD2154C_1_ENV_DOCKERCLOUD_CONTAINER_HOSTNAME || 'localhost',
 
-  secret: process.env.secret || 'yLyzip8loy2y88-_Mt0PPfbTyt2OZvr3rCMv_DFSidsIghiXLGO1MuyRUMyCQrmW',
+  secret: process.env.SESSION_SECRET || 'yLyzip8loy2y88-_Mt0PPfbTyt2OZvr3rCMv_DFSidsIghiXLGO1MuyRUMyCQrmW',
 
 	// HTTP Cache value for the stored files
 	cache: process.env.CACHE || "max-age=290304000, public",
