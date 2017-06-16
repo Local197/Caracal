@@ -28,7 +28,7 @@ var config = {
 
   redis: process.env.REDIS_3BD2154C_1_ENV_DOCKERCLOUD_CONTAINER_HOSTNAME || 'localhost',
 
-  secret: process.env.SESSION_SECRET || 'yLyzip8loy2y88-_Mt0PPfbTyt2OZvr3rCMv_DFSidsIghiXLGO1MuyRUMyCQrmW',
+  secret: process.env.SESSION_SECRET ? process.env.SESSION_SECRET : 'yLyzip8loy2y88-_Mt0PPfbTyt2OZvr3rCMv_DFSidsIghiXLGO1MuyRUMyCQrmW',
 
 	// HTTP Cache value for the stored files
 	cache: process.env.CACHE || "max-age=290304000, public",
@@ -102,7 +102,7 @@ var RedisStore = redisStore(session);
 var client = Redis.createClient(6379, config.redis);
 
 var requiresAdmin = (req, res, next) => {
-  if (req.user._json.app_metadata.roles[0] === 'admin') {
+  if (req.user && req.user._json.app_metadata.roles[0] === 'admin') {
     next();
   } else {
     res.status(401).json({message: 'Please log in to post pictures.'})
