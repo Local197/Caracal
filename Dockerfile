@@ -1,5 +1,5 @@
 # From the official nodejs image, based on Debian Jessy
-FROM node:7-alpine
+FROM node:7.6.0
 
 # Install ffmpeg and imagemagick
 RUN apk --no-cache add ffmpeg imagemagick git
