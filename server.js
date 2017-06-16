@@ -79,6 +79,15 @@ var config = {
 //    : / \ . < > ( ) [ ]
 // GenerateId has the sha256 checksum as optional argument
 var generateId = (hash) => hash;
+
+const requiresAdmin = (req, res, next) => {
+  if (req.user._json._profile.app_metadata.roles[0] === 'admin') {
+    next();
+  } else {
+    res.status(401).json({message: 'Please log in to post pictures.'})
+  }
+});
+
 switch (config.idsGeneration) {
 	case 'hash':
 		// Just return the hash
@@ -135,7 +144,20 @@ var ffmpegWorker = async.queue((task, callback) => {
 }, config.videoConcurrency);
 
 var app = express();
-
+server.use(session({
+  store: new RedisStore({
+    host: redis,
+    port: 6379,
+    client,
+    ttl: 7 * 24 * 60 * 60, // expiration from redis in seconds
+  }),
+  secret: secrets.session,
+  resave: false,
+  rolling: true,
+  saveUninitialized: false,
+}));
+server.use(passport.initialize());
+server.use(passport.session());
 app.use(compression());
 app.use(morgan('short'));
 
@@ -208,7 +230,7 @@ app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$
 		width = parseInt(req.params[1]),
 		height = parseInt(req.params[2]),
 		deform = !!req.params[0];
-	
+
 	sendResizedImage(path, width, height, deform, res);
 });
 
@@ -239,7 +261,7 @@ app.get(/^\/thumbnail\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	});
 });
 
-app.post('/upload', (req, res) => {
+app.post('/upload', requiresAdmin, (req, res) => {
 	var form = new formidable.IncomingForm();
 	form.uploadDir = uploadDatapath;
 	form.keepExtensions = true;
@@ -299,12 +321,12 @@ app.post('/upload', (req, res) => {
 	})
 });
 
-app.get(/^\/remove\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
+app.get(/^\/remove\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, requiresAdmin, (req, res) => {
 	var path = req.params[0];
 	removeFile(path, req, res);
 });
 
-app.get(/^\/remove\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/remove\/([a-zA-Z0-9_\-]+)$/, requiresAdmin, (req, res) => {
 	var id = req.params[0];
 
 	convertIdToHashAndPath(id, (infos) => {
@@ -335,7 +357,7 @@ function removeFile(path, req, res) {
 			res.status(500).send(err);
 			return;
 		}
-	
+
 		docs.forEach((doc) => {
 			fs.unlink(doc.unlink, () => {});
 		});
@@ -343,7 +365,7 @@ function removeFile(path, req, res) {
 		picturesSizeDb.remove({path: path});
 
 		idsDb.remove({hash});
-		
+
 		filesDb.remove({hash: hash, extension:extension}, {}, (err, numRemoved) => {
 			if (err) {
 				res.status(500).send(err);
@@ -452,7 +474,7 @@ function sendThumbnail(path, res) {
 }
 
 function closestInArray(array, goal) {
-  return array.reduce((prev, curr) => 
+  return array.reduce((prev, curr) =>
       Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
 }
 
@@ -577,7 +599,7 @@ function fetchDistantFile(u2, res, callback, reserror) {
 			var file = docs[0];
 
 			var path = uploadDatapath+'/'+file.hash+'.'+file.extension;
-		
+
 			if (res) {
 				res.sendFile(path, {root: __dirname});
 			}
@@ -601,14 +623,14 @@ function fetchDistantFile(u2, res, callback, reserror) {
 			};
 
 			(u.protocol === 'https:' ? https : http).get(u, (httpres) => {
-			
+
 				var type = httpres.headers['content-type'];
 
 				if (res) {
 					res.status(httpres.statusCode);
 					res.type(type);
 					res.header('Cache-Control', config.cache);
-					httpres.pipe(res);	
+					httpres.pipe(res);
 				}
 
 
@@ -762,7 +784,7 @@ app.get(/^\/convert\/(mp4|webm)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (r
 	var path = req.params[2],
 		format = req.params[0];
 		size = parseInt(req.params[1]);
-	
+
 	sendConvertedVideo(path, format, size, res);
 });
 
