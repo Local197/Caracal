@@ -188,9 +188,13 @@ app.use(morgan('short'));
 if (Array.isArray(config.allowedDomains)) {
 	app.use(cors({
 	  origin: function(origin, callback){
-	    var originIsWhitelisted = config.allowedDomains.indexOf(origin) !== -1;
-	    callback(null, originIsWhitelisted);
-	  }
+	    var whitelisted = config.allowedDomains.indexOf(origin) !== -1;
+	    callback(null, whitelisted);
+	  },
+    credentials: function(origin, callback){
+	    var whitelisted = config.allowedDomains.indexOf(origin) !== -1;
+	    callback(null, whitelisted);
+	  },
 	}));
 }
 else {
