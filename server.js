@@ -191,10 +191,7 @@ if (Array.isArray(config.allowedDomains)) {
 	    var whitelisted = config.allowedDomains.indexOf(origin) !== -1;
 	    callback(null, whitelisted);
 	  },
-    credentials: function(origin, callback){
-	    var whitelisted = config.allowedDomains.indexOf(origin) !== -1;
-	    callback(null, whitelisted);
-	  },
+    credentials: true,
 	}));
 }
 else {
