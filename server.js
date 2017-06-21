@@ -201,7 +201,7 @@ else {
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(path.resolve(uploadDatapath)));
 
-app.get('/files', (req, res) => {
+app.get('/mms/files', (req, res) => {
 	filesDb.find({}).sort({mtime: -1}).exec((err, docs) => {
 		for (var i = 0, l = docs.length; i < l; ++i) {
 			delete docs[i]._id;
@@ -210,7 +210,7 @@ app.get('/files', (req, res) => {
 	});
 });
 
-app.get(/^\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/mms\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	var id = req.params[0];
 	convertIdToHashAndPath(id, (infos) => {
 		res.sendFile(infos.fullPath, {root: __dirname});
@@ -219,7 +219,7 @@ app.get(/^\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	});
 });
 
-app.get('/paginateFiles/:page', (req, res) => {
+app.get('/mms/paginateFiles/:page', (req, res) => {
 	var pageSize = req.query.hasOwnProperty('pageSize') ?
 			Math.max(2, (parseInt(req.query.pageSize) || 0)) : 10,
 		page = Math.max(-1, (parseInt(req.params.page) || 0));
@@ -250,7 +250,7 @@ app.get('/paginateFiles/:page', (req, res) => {
 
 });
 
-app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
+app.get(/^\/mms\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
 	var path = req.params[3],
 		width = parseInt(req.params[1]),
 		height = parseInt(req.params[2]),
@@ -259,7 +259,7 @@ app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$
 	sendResizedImage(path, width, height, deform, res);
 });
 
-app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/mms\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	var id = req.params[3],
 		width = parseInt(req.params[1]),
 		height = parseInt(req.params[2]),
@@ -272,12 +272,12 @@ app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => 
 	});
 });
 
-app.get(/^\/thumbnail\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
+app.get(/^\/mms\/thumbnail\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
 	var path = req.params[0];
 	sendThumbnail(path, res);
 });
 
-app.get(/^\/thumbnail\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/mms\/thumbnail\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	var id = req.params[0];
 	convertIdToHashAndPath(id, (infos) => {
 		sendThumbnail(infos.path, res);
@@ -286,7 +286,7 @@ app.get(/^\/thumbnail\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	});
 });
 
-app.post('/upload', requiresAdmin, (req, res) => {
+app.post('/mms/upload', requiresAdmin, (req, res) => {
 	var form = new formidable.IncomingForm();
 	form.uploadDir = uploadDatapath;
 	form.keepExtensions = true;
@@ -346,12 +346,12 @@ app.post('/upload', requiresAdmin, (req, res) => {
 	})
 });
 
-app.get(/^\/remove\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, requiresAdmin, (req, res) => {
+app.get(/^\/mms\/remove\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, requiresAdmin, (req, res) => {
 	var path = req.params[0];
 	removeFile(path, req, res);
 });
 
-app.get(/^\/remove\/([a-zA-Z0-9_\-]+)$/, requiresAdmin, (req, res) => {
+app.get(/^\/mms\/remove\/([a-zA-Z0-9_\-]+)$/, requiresAdmin, (req, res) => {
 	var id = req.params[0];
 
 	convertIdToHashAndPath(id, (infos) => {
@@ -402,7 +402,7 @@ function removeFile(path, req, res) {
 	});
 };
 
-app.get(/^\/details\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
+app.get(/^\/mms\/details\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
 	var path = req.params[0];
 	var hashAndExtension = path.split('.');
 	var hash = hashAndExtension[0],
@@ -411,7 +411,7 @@ app.get(/^\/details\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
 	fileDetails(hash, extension, res);
 });
 
-app.get(/^\/details\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/mms\/details\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	var id = req.params[0];
 
 	convertIdToHashAndPath(id, (infos) => {
@@ -531,7 +531,7 @@ function sendResizedImage(path, width, height, deform, res) {
 				}, (err) => {
 						if (err) {
 							console.log(err);
-							res.redirect('/broken_thumbnail.png');
+							res.redirect('/mms/broken_thumbnail.png');
 							return;
 						}
 
@@ -775,18 +775,18 @@ function convertIdToHashAndPath(id, callbackSuccess, callbackError) {
 	});
 }
 
-app.get(/^\/https?:\/\/?.+$/, (req, res) => {
+app.get(/^\/mms\/https?:\/\/?.+$/, (req, res) => {
 	fetchDistantFile(req.url.slice(1), res);
 });
 
-app.get(/^\/fetch\/https?:\/\/?.+$/, (req, res) => {
+app.get(/^\/mms\/fetch\/https?:\/\/?.+$/, (req, res) => {
 	fetchDistantFile(req.url.slice(7), false, (filepath, hash, extension, fileDetails) => {
 		fileDetails.status = "ok";
 		res.send(fileDetails);
 	}, res);
 });
 
-app.get(/^\/thumbnail\/https?:\/\/?.+$/, (req, res) => {
+app.get(/^\/mms\/thumbnail\/https?:\/\/?.+$/, (req, res) => {
 	var path = req.url.slice(11);
 
 	fetchDistantFile(path, false, (filepath, hash, extension) => {
@@ -794,7 +794,7 @@ app.get(/^\/thumbnail\/https?:\/\/?.+$/, (req, res) => {
 	}, res);
 });
 
-app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/https?:\/\/?.+$/, (req, res) => {
+app.get(/^\/mms\/resize\/(deform\/)?(\d+)\/(\d+)\/https?:\/\/?.+$/, (req, res) => {
 	var path = req.url.match(/^\/resize\/(deform\/)?\d+\/\d+\/(https?:\/\/?.+)$/)[2],
 		width = parseInt(req.params[1]),
 		height = parseInt(req.params[2]),
@@ -805,7 +805,7 @@ app.get(/^\/resize\/(deform\/)?(\d+)\/(\d+)\/https?:\/\/?.+$/, (req, res) => {
 	}, res);
 });
 
-app.get(/^\/convert\/(mp4|webm)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
+app.get(/^\/mms\/convert\/(mp4|webm)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (req, res) => {
 	var path = req.params[2],
 		format = req.params[0];
 		size = parseInt(req.params[1]);
@@ -813,7 +813,7 @@ app.get(/^\/convert\/(mp4|webm)\/(\d+)\/([a-fA-F0-9]{40,64}\.[a-zA-Z0-9]+)$/, (r
 	sendConvertedVideo(path, format, size, res);
 });
 
-app.get(/^\/convert\/(mp4|webm)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
+app.get(/^\/mms\/convert\/(mp4|webm)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	var id = req.params[2],
 		format = req.params[0],
 		size = parseInt(req.params[1]);
@@ -825,7 +825,7 @@ app.get(/^\/convert\/(mp4|webm)\/(\d+)\/([a-zA-Z0-9_\-]+)$/, (req, res) => {
 	});
 });
 
-app.get(/^\/convert\/(mp4|webm)\/(\d+)\/(https?:\/\/?.+)$/, (req, res) => {
+app.get(/^\/mms\/convert\/(mp4|webm)\/(\d+)\/(https?:\/\/?.+)$/, (req, res) => {
 	var path = req.params[2],
 		format = req.params[0],
 		size = parseInt(req.params[1]);
@@ -836,5 +836,5 @@ app.get(/^\/convert\/(mp4|webm)\/(\d+)\/(https?:\/\/?.+)$/, (req, res) => {
 });
 
 var server = app.listen(config.port, () => {
-	console.log("Server started on http://localhost:"+config.port+"/");
+	console.log("Server started on http://localhost:"+config.port+"/mms/");
 });
