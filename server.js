@@ -198,8 +198,8 @@ else {
 	app.use(cors());
 }
 
-app.use(express.static(__dirname + '/public'));
-app.use(express.static(path.resolve(uploadDatapath)));
+app.use('/mms', express.static(__dirname + '/public'));
+app.use('/mms', express.static(path.resolve(uploadDatapath)));
 
 app.get('/mms/files', (req, res) => {
 	filesDb.find({}).sort({mtime: -1}).exec((err, docs) => {
