@@ -198,7 +198,6 @@ else {
 	app.use(cors());
 }
 
-app.use('/mms', express.static(__dirname + '/public'));
 app.use('/mms', express.static(path.resolve(uploadDatapath)));
 
 app.get('/mms/files', (req, res) => {
@@ -362,13 +361,6 @@ app.get(/^\/mms\/remove\/([a-zA-Z0-9_\-]+)$/, requiresAdmin, (req, res) => {
 });
 
 function removeFile(path, req, res) {
-
-	var deletionsKey = config['deletions-key'];
-	if (deletionsKey && deletionsKey !== req.query.key) {
-		res.status(403).send('Missing or wrong deletions key');
-		return;
-	}
-
 	var	uploadPath = uploadDatapath+"/"+path;
 
 	fs.unlink(uploadPath, () => {});
